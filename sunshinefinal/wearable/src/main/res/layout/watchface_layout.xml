@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.wearable.view.BoxInsetLayout
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:id="@+id/box_inset_layout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/timeText"
+            android:gravity="center_horizontal"
+            android:textSize="30sp"
+            android:text="11:59:59"
+            android:textColor="@color/white"
+            android:layout_gravity="center_horizontal" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/dateText"
+            android:text="Mon, Sma 34 2099"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_vertical"
+            android:textColor="@color/white"/>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center">
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="fill_parent"
+                android:id="@+id/weatherImage"
+                android:src="@drawable/art_clear_temp"
+                android:paddingRight="5dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:id="@+id/maxTempText"
+                android:text="99"
+                android:textSize="30sp"
+                android:textColor="@color/white"
+                android:paddingRight="5dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:id="@+id/minTempText"
+                android:text="0"
+                android:textSize="30sp"
+                android:textColor="@color/dialog_shade_background"/>
+        </LinearLayout>
+    </LinearLayout>
+
+</android.support.wearable.view.BoxInsetLayout>
