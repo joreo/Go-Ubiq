@@ -34,8 +34,19 @@ import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.wearable.DataApi;
+import com.google.android.gms.wearable.DataEvent;
+import com.google.android.gms.wearable.DataEventBuffer;
+import com.google.android.gms.wearable.DataItem;
+import com.google.android.gms.wearable.DataMap;
+import com.google.android.gms.wearable.DataMapItem;
+import com.google.android.gms.wearable.Wearable;
 
 import java.lang.ref.WeakReference;
 import java.util.TimeZone;
@@ -85,7 +96,9 @@ public class MyWatchFace extends CanvasWatchFaceService {
         }
     }
 
-    private class Engine extends CanvasWatchFaceService.Engine {
+    private class Engine extends CanvasWatchFaceService.Engine implements DataApi.DataListener,
+            GoogleApiClient.ConnectionCallbacks,
+            GoogleApiClient.OnConnectionFailedListener {
         final Handler mUpdateTimeHandler = new EngineHandler(this);
         boolean mRegisteredTimeZoneReceiver = false;
         Paint mBackgroundPaint;
@@ -94,11 +107,17 @@ public class MyWatchFace extends CanvasWatchFaceService {
         Paint mSubTextPaint;
         boolean mAmbient;
         Time mTime;
+
+        Bitmap conditionIcon;
+        String highTemperature;
+        String lowTemperature;
+
         final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mTime.clear(intent.getStringExtra("time-zone"));
+                //mTime.clear(intent.getStringExtra("time-zone"));
                 mTime.setToNow();
+                invalidate();
             }
         };
         int mTapCount;
@@ -106,6 +125,12 @@ public class MyWatchFace extends CanvasWatchFaceService {
         float mXOffset;
         float mYOffset;
         float mYOffset2;
+
+        //get the weather
+        private static final String WEATHER_PATH = "/weather";
+        private static final String HIGH_TEMPERATURE = "high_temperature";
+        private static final String LOW_TEMPERATURE = "low_temperature";
+        private static final String WEATHER_CONDITION = "weather_condition";
 
         //icon stuff
         private Bitmap mWeatherIcon;
@@ -116,9 +141,19 @@ public class MyWatchFace extends CanvasWatchFaceService {
          */
         boolean mLowBitAmbient;
 
+        private GoogleApiClient mGoogleApiClient;
+        private Resources resources;
+
         @Override
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
+
+            mGoogleApiClient = new GoogleApiClient.Builder(MyWatchFace.this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(Wearable.API)
+                    .build();
+
 
             setWatchFaceStyle(new WatchFaceStyle.Builder(MyWatchFace.this)
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_VARIABLE)
@@ -126,7 +161,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
                     .setShowSystemUiTime(false)
                     .setAcceptsTapEvents(true)
                     .build());
-            Resources resources = MyWatchFace.this.getResources();
+            resources = MyWatchFace.this.getResources();
             mYOffset = resources.getDimension(R.dimen.digital_y_offset);
             mYOffset2 = resources.getDimension(R.dimen.digital_y_offset2);
 
@@ -142,6 +177,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
 
             mTime = new Time();
+
+
         }
 
         @Override
@@ -285,22 +322,35 @@ public class MyWatchFace extends CanvasWatchFaceService {
             //"first come, first serve"
 
 
-            if(!mAmbient) { //don't draw the icon/temp if the face is off
+            if (!mAmbient) { //don't draw the icon/temp if the face is off
 
                 //let's draw a picture maybe
                 //at some point we need the icon and the weather to be dynamic
+                //update: rewatched the lesson and adapted the fake steps example for this
+
+                //mWeatherIcon was a temp, let's use the new one
                 mWeatherIcon = BitmapFactory.decodeResource(getResources(),
                         R.mipmap.ic_launcher);
+                //was mWeatherIcon, now conditionIcon
+                //Log.v("@@@We tried", "resizedBitmap");
+                //^^spams the crap out of my log, commented out
                 Bitmap resizedBitmap = Bitmap.createScaledBitmap(mWeatherIcon, 150, 150, true);
 
                 //i dont know how to calc half way yet, so let's make some shit up
 
                 int cx = (width - resizedBitmap.getWidth()) >> 1;
-                int cy =(height - resizedBitmap.getHeight()) >>1;
+                int cy = (height - resizedBitmap.getHeight()) >> 1;
 
                 canvas.drawBitmap(resizedBitmap, cx, cy, new Paint());
 
-                canvas.drawText("H: 90 L: 70 ^^", mXOffset, mYOffset2, mSubTextPaint);
+                //fake high, low, icon? (^^)
+                //canvas.drawText("H: 90 L: 70 ^^", mXOffset, mYOffset2, mSubTextPaint);
+
+                //let's try high, low (high+offset), icon center BG
+                //Log.v("highTemperature", highTemperature);
+                canvas.drawText("a temp", mXOffset, mYOffset2, mSubTextPaint);
+
+
 
             }
 
@@ -351,6 +401,45 @@ public class MyWatchFace extends CanvasWatchFaceService {
                         - (timeMs % INTERACTIVE_UPDATE_RATE_MS);
                 mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs);
             }
+        }
+
+        @Override
+        public void onConnected(Bundle bundle) {
+            Wearable.DataApi.addListener(mGoogleApiClient, this);
+            Log.v("@@@We tried", "onConnected");
+        }
+
+        @Override
+        public void onConnectionSuspended(int i) {
+            Log.v("@@@It seems", "onConnectionSuspended");
+        }
+
+        @Override
+        public void onConnectionFailed(ConnectionResult connectionResult) {
+            Log.v("@@@It seems", "onConnectionFailed");
+        }
+
+        @Override
+        public void onDataChanged(DataEventBuffer dataEvents) {
+            Log.v("@@@We tried", "onDataChanged");
+            for (DataEvent dataEvent : dataEvents) {
+                if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
+                    DataItem dataItem = dataEvent.getDataItem();
+                    if (dataItem.getUri().getPath().compareTo(WEATHER_PATH) == 0) {
+                        DataMap dataMap = DataMapItem.fromDataItem(dataItem).getDataMap();
+                        setWeatherData(dataMap.getString(HIGH_TEMPERATURE),
+                                dataMap.getString(LOW_TEMPERATURE), dataMap.getInt(WEATHER_CONDITION));
+                        invalidate();
+                    }
+                }
+            }
+        }
+
+        private void setWeatherData(String highTemperature, String lowTemperature, int weatherCondition) {
+            Log.v("@@@We tried", "setWeatherData");
+            this.highTemperature = highTemperature;
+            this.lowTemperature = lowTemperature;
+            this.conditionIcon = BitmapFactory.decodeResource(resources, GetIcons.getIconResourceForWeatherCondition(weatherCondition));
         }
     }
 }
