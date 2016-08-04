@@ -108,7 +108,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
         boolean mAmbient;
         Time mTime;
 
-        Bitmap conditionIcon;
+        Bitmap weatherIcon;
         String highTemperature;
         String lowTemperature;
 
@@ -331,10 +331,10 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 //mWeatherIcon was a temp, let's use the new one
                 mWeatherIcon = BitmapFactory.decodeResource(getResources(),
                         R.mipmap.ic_launcher);
-                //was mWeatherIcon, now conditionIcon
+                //was mWeatherIcon, now weatherIcon
                 //Log.v("@@@We tried", "resizedBitmap");
                 //^^spams the crap out of my log, commented out
-                Bitmap resizedBitmap = Bitmap.createScaledBitmap(mWeatherIcon, 150, 150, true);
+                Bitmap resizedBitmap = Bitmap.createScaledBitmap(weatherIcon, 150, 150, true);
 
                 //i dont know how to calc half way yet, so let's make some shit up
 
@@ -348,7 +348,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
                 //let's try high, low (high+offset), icon center BG
                 //Log.v("highTemperature", highTemperature);
-                canvas.drawText("a temp", mXOffset, mYOffset2, mSubTextPaint);
+                canvas.drawText("sample temp", mXOffset, mYOffset2, mSubTextPaint);
 
 
 
@@ -439,7 +439,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             Log.v("@@@We tried", "setWeatherData");
             this.highTemperature = highTemperature;
             this.lowTemperature = lowTemperature;
-            this.conditionIcon = BitmapFactory.decodeResource(resources, GetIcons.getIconResourceForWeatherCondition(weatherCondition));
+            this.weatherIcon = BitmapFactory.decodeResource(resources, GetIcons.getIconResourceForWeatherCondition(weatherCondition));
         }
     }
 }
