@@ -529,12 +529,12 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
         //put our weather in something like an intent
         PutDataMapRequest weatherMapRequest = PutDataMapRequest.create(WEATHER_PATH).setUrgent();
         DataMap weatherDataMap = weatherMapRequest.getDataMap();
-        weatherDataMap.putLong("currentTimeMillis", System.currentTimeMillis()); //add something that changes
+        weatherDataMap.putLong("currentTimeMillis", System.currentTimeMillis()) ; //add something that changes
         weatherDataMap.putString(HIGH_TEMPERATURE, Utility.formatTemperature(context, cursor.getDouble(INDEX_MAX_TEMP)));
         weatherDataMap.putString(LOW_TEMPERATURE, Utility.formatTemperature(context, cursor.getDouble(INDEX_MIN_TEMP)));
         //use the weather index so we can reuse the utility class for icons
         weatherDataMap.putInt(WEATHER_CONDITION, cursor.getInt(INDEX_WEATHER_ID));
-        PutDataRequest weatherRequest = weatherMapRequest.asPutDataRequest();
+        PutDataRequest weatherRequest = weatherMapRequest.asPutDataRequest().setUrgent();
         Wearable.DataApi.putDataItem(googleApiClient, weatherRequest);
         Log.v("@@@HIGH_TEMPERATURE", Utility.formatTemperature(context, cursor.getDouble(INDEX_MAX_TEMP)));
         Log.v("@@@HIGH_TEMPERATURE", HIGH_TEMPERATURE);

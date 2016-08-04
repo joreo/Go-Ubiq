@@ -153,6 +153,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
                     .addOnConnectionFailedListener(this)
                     .addApi(Wearable.API)
                     .build();
+            //saw this in a post, gave it a shot, doesnt seem to make a difference
+            mGoogleApiClient.connect();
 
 
             setWatchFaceStyle(new WatchFaceStyle.Builder(MyWatchFace.this)
@@ -329,29 +331,29 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 //update: rewatched the lesson and adapted the fake steps example for this
 
                 //mWeatherIcon was a temp, let's use the new one
-                mWeatherIcon = BitmapFactory.decodeResource(getResources(),
-                        R.mipmap.ic_launcher);
+//                mWeatherIcon = BitmapFactory.decodeResource(getResources(),
+//                        R.mipmap.ic_launcher);
                 //was mWeatherIcon, now weatherIcon
                 //Log.v("@@@We tried", "resizedBitmap");
                 //^^spams the crap out of my log, commented out
-                Bitmap resizedBitmap = Bitmap.createScaledBitmap(weatherIcon, 150, 150, true);
 
-                //i dont know how to calc half way yet, so let's make some shit up
+                //ding ding ding!! this was the culprit. do a null check, change some data, watch works fine
+                //how annoying/relieving is that?
+                if(weatherIcon != null && highTemperature != null && lowTemperature != null) {
+                    Bitmap resizedBitmap = Bitmap.createScaledBitmap(weatherIcon, 150, 150, true);
 
-                int cx = (width - resizedBitmap.getWidth()) >> 1;
-                int cy = (height - resizedBitmap.getHeight()) >> 1;
+                    //found a way to put the icon dead center and in the back
+                    int cx = (width - resizedBitmap.getWidth()) >> 1;
+                    int cy = (height - resizedBitmap.getHeight()) >> 1;
 
-                canvas.drawBitmap(resizedBitmap, cx, cy, new Paint());
+                    //centered icon
+                    canvas.drawBitmap(resizedBitmap, cx, cy, new Paint());
 
-                //fake high, low, icon? (^^)
-                //canvas.drawText("H: 90 L: 70 ^^", mXOffset, mYOffset2, mSubTextPaint);
-
-                //let's try high, low (high+offset), icon center BG
-                //Log.v("highTemperature", highTemperature);
-                canvas.drawText("sample temp", mXOffset, mYOffset2, mSubTextPaint);
-
-
-
+                    //high temp
+                    canvas.drawText("High: " + highTemperature, cx, mYOffset2, mSubTextPaint);
+                    //low temp
+                    canvas.drawText("Low: " + lowTemperature, cx, mYOffset2 + 50, mSubTextPaint);
+                }
             }
 
             // Draw H:MM in ambient mode or H:MM:SS in interactive mode.
